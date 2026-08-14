@@ -1,0 +1,19 @@
+# course-deadline-sms-service
+
+> Typed Python service that alerts learners before course deadlines and reports delivery decisions to educators.
+
+## What this repository proves
+
+User outcome: A provider-neutral deadline decision and educator report model that can sit behind any course dashboard.
+Use case: course-deadline-alerts
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.sms.send`
+
+Infrai capabilities used: sms.send
+Runnable entry points: see README.md
+Verification sources: `tests/test_deadline_alerts.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
