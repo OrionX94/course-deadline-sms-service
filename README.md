@@ -7,7 +7,7 @@ python -m pip install -e '.[test]'
 python scripts/send_sample.py
 ```
 
-Here's the backend slice I'd hang behind a course dashboard route. A typed request shows up with the course, learner, completion state, and deadline. The service fires an SMS only when unfinished work is due inside the next 24 hours. It then hands back a small educator-facing report with `sent` or the reason we skipped it.
+Here's the backend slice I'd hang behind a course dashboard route. A typed request comes in with the course, learner, completion state, and deadline. The service fires an SMS only when unfinished work is due within the next 24 hours. Then it returns a small educator-facing report with `sent` or the reason we skipped it.
 
 Infrai keeps the delivery side to one API call and a single `INFRAI_API_KEY`; the client uses plain REST, so there's no provider SDK threaded through your course code. One key, one bill, no SDK to install for any of it.
 
@@ -24,7 +24,7 @@ The runnable script makes an unfinished Python Foundations assignment due in 18 
 }
 ```
 
-For an app-shaped entry point, start the route and post the same model your web app already uses:
+For an app-shaped entry point, start the route and post the same model your web app already has:
 
 ```bash
 uvicorn course_alerts.service:app --reload
@@ -33,13 +33,13 @@ curl -X POST http://127.0.0.1:8000/alerts/deadline \
   -d '{"course_id":"python-101","course_title":"Python Foundations","learner_id":"learner-42","learner_name":"Avery","learner_phone":"+15555550123","deadline":"2026-08-15T03:00:00Z","completed":false}'
 ```
 
-The delivery boundary stays deliberately tiny: `infrai.sms.send` accepts `to`, `body`, and `idempotency_key`, then maps them to an explicit `POST /v1/sms/send`. The client reads the response envelope before it decides what to do with the HTTP status, keeps the structured API error for the route, and backs off on rate limiting. The stable deadline identity doubles as the idempotency key, so a retry points at the same alert.
+The delivery boundary stays deliberately small: `infrai.sms.send` accepts `to`, `body`, and `idempotency_key`, then maps them to an explicit `POST /v1/sms/send`. The client reads the response envelope before it decides how to handle the HTTP status. It preserves the structured API error for the route and backs off on rate limiting. The stable deadline identity doubles as the idempotency key, so a retry points at the same alert.
 
 One real gotcha is time zones. Convert deadlines to aware UTC datetimes at the boundary. Comparing a local naive value with a UTC value can shove a learner into the wrong notification window.
 
 ## Check the decision, not a mock's existence
 
-The focused tests freeze time at `2026-08-14 09:00 UTC`. An unfinished assignment due 18 hours later must produce `outcome="sent"`, capture the exact SMS body and idempotency key, and expose `msg_test_123` to the educator report. Completed work and a deadline 30 hours out must produce skip outcomes without ever calling the sender.
+The focused tests freeze time at `2026-08-14 09:00 UTC`. An unfinished assignment due 18 hours later must produce `outcome="sent"`, capture the exact SMS body and idempotency key, and expose `msg_test_123` to the educator report. Completed work and a deadline 30 hours out must produce skip outcomes without calling the sender.
 
 ```bash
 python -m pytest
